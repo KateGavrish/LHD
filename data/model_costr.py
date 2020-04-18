@@ -1,18 +1,12 @@
 import numpy as np
 import pandas as pd
-import os
 import re
 from sklearn.model_selection import train_test_split
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Embedding
-from keras.layers import LSTM
-from keras.layers import Conv1D, MaxPooling1D
-from keras.layers import Dense, Dropout, Activation
-from keras.layers import Embedding
 from keras.layers import Conv1D, GlobalMaxPooling1D
-from keras.datasets import imdb
 
 
 true = pd.read_csv('data/True.csv')
@@ -57,12 +51,12 @@ def vectorize(text):
             pass
     return return_list
 
+
 if __name__ == '__main__':
     X = data['cleaned'].apply(vectorize)
 
     x_train, x_test, y_train, y_test = train_test_split(np.array(X), data['true'], test_size=0.8)
 
-    # set parameters:
     max_features = 120645
     maxlen = 7916
     pool_size = 4

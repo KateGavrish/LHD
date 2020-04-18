@@ -1,9 +1,29 @@
 from flask import Flask, render_template, redirect, request
 from data import db_session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-
 from data.users import User
 from data.forms import *
+from func_mod import *
+import tensorflow
+
+
+def predict(text):
+    """Возвращает значение от 0 до 1 - фейковость новости"""
+    import numpy as np
+    from keras.models import load_model
+    from data.model_costr import vectorize
+    from keras.preprocessing import sequence
+
+    maxlen = 7916
+    model = load_model('data/my_model.h5')
+    a = model.predict(sequence.pad_sequences(np.array(vectorize(text)).reshape(-1, 1), maxlen=maxlen))
+    c = []
+    for x in a:
+        x = list(x)
+        c += x
+    result = max(c)
+    return result
+
 
 app = Flask(__name__)
 
@@ -14,9 +34,19 @@ login_manager.init_app(app)
 db_session.global_init("db/user_data.sqlite")
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    form = CheckForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        if form.text.data:
+            percent = int(round(predict(form.text.data) * 100))
+            return redirect(f'/info/{percent}')
+    return render_template('index_aut.html', form=form)
+
+
+@app.route('/info/<int:a>')
+def info(a):
+    return render_template('analitic.html', per=a)
 
 
 @login_manager.user_loader

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrap">
+		<canvas id="canvas" width="300" height="300"></canvas>
+        <script type="text/javascript">
+            var canvas = document.getElementById('canvas'),
+            ctx = canvas.getContext('2d'),
+            xc = canvas.width / 2,
+            yc = canvas.height / 2,
+            options = {},
+            i = 0;
+            i1 = 0;
+
+        init();
+
+        function getRadians(degree) {
+            return Math.PI / 180 * degree;
+        }
+
+        function init() {
+            // длительность отрисовки одного сектора
+            options.duration = 100,
+            options.end_per = {{ per }}
+            // массив со значениями цвета начала и конца градиента секторов
+            options.colors = ['#f00', '#ff2f00', '#ff7e00', '#ffde00', '#dffc00', '#7ae000', '#2cbb00', '#15b200'];
+            // шаг отрисовки цветов (размер сектора) в радианах
+            options.step = getRadians(3.15);
+            // получаем угол начала прогресс бара в радианах
+            options.start = getRadians(112.5);
+            // ширина прогресс бара в px
+            options.width = 30,
+            // радиус прогресс бара в px
+            options.r = xc - options.width;
+
+            // очищаем canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // рисуем подложку без анимации
+            drawSector('#eee', options.width);
+            // запускаем рисование прогресс бара
+            draw();
+        }
+
+        function draw() {
+            var startColor	= options.colors[i],
+                endColor	= options.colors[i + 1];
+
+            // получаем координаты X, Y точек начала и конца i-го сектора прогресс бара
+            var x0	= xc + Math.cos(options.start) * options.r,
+                y0	= yc + Math.sin(options.start) * options.r,
+                x1	= xc + Math.cos(options.start + options.step) * options.r,
+                y1	= yc + Math.sin(options.start + options.step) * options.r;
+            var gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+            gradient.addColorStop(0, startColor);
+            // в конце объекта градиента
+            gradient.addColorStop(1.0, endColor);
+
+            // старт анимации отрисовки одного сектора
+            var	start = new Date().getTime();
+
+            var fn = function() {
+                // время прошедшее от начала отрисовки сектора
+                var	now = new Date().getTime() - start;
+                now = (now < options.duration) ? now : options.duration;
+                // на сколько должен быть отрисован текущий сектор
+                var	inc = options.step * now / options.duration;
+                drawSector('#fff', options.width + 2, inc);
+                // закрашиваем текущий сектор градиентом на угол равный inc
+                drawSector(gradient, options.width, inc);
+                showPercents(i1, inc);
+                if (Math.ceil((options.step * i1 + inc) / 0.0549779) == options.end_per) {
+                    // делаем кнопку запуска прогресс бара неактивно
+                    button.classList.add('disable');
+                    button.removeEventListener('click', draw);
+                    return;
+                }
+                if (now < options.duration) {
+                    requestAnimationFrame(fn);
+                } else {
+                    i1++;
+                    options.start += options.step;
+                    return draw();
+                }
+            };
+            requestAnimationFrame(fn);
+        }
+        function drawSector(colorFill, widthWheel, inc) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorFill;
+            ctx.lineWidth = widthWheel;
+            var end = (inc === undefined) ? getRadians(427.5) : options.start + inc;
+            ctx.arc(xc, yc, options.r, options.start, end);
+            ctx.stroke();
+            return;
+        }
+
+
+        function showPercents(i, inc) {
+            var angle = options.step * i + inc,
+                percents = Math.ceil(angle / 0.0549779);
+
+            ctx.fillStyle = '#666';
+            ctx.font = '400 20px Roboto';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'center';
+            ctx.clearRect(120, 125, 60, 30);
+            ctx.fillText(percents + '%', xc, yc);
+        }
+        </script>
+</div>
+{% endblock %}

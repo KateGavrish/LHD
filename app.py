@@ -4,7 +4,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from data.users import User, Mistakes
 from data.forms import *
 from func_mod import *
-# import tensorflow
+import tensorflow
 
 
 def predict(text):
@@ -52,9 +52,8 @@ def index():
                 user = session.query(User).get(current_user.id)
                 user.last = form.text.data
                 session.commit()
-            # percent = int(round(predict(form.text.data) * 100))
-            # WORDS = analyz(form.text.data)
-            percent = 80
+            percent = int(round(predict(form.text.data) * 100))
+            WORDS = analyz(form.text.data)
             return redirect(f'/info/{percent}')
     return render_template('index_aut.html', form=form)
 

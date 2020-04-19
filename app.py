@@ -56,7 +56,7 @@ def load_user(user_id):
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
+def register():
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:

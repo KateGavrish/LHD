@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, request
 from data import db_session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from data.users import User
+from data.users import User, Mistakes
 from data.forms import *
 from func_mod import *
 import tensorflow
@@ -14,6 +14,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/user_data.sqlite")
 WORDS = []
+ADMIN = [1]
 
 
 @app.route('/', methods=['GET', 'POST'])

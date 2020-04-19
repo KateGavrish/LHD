@@ -1,27 +1,32 @@
-def predict(text):
-    """Возвращает значение от 0 до 1 - фейковость новости"""
-    import numpy as np
-    from keras.preprocessing import sequence
-    from keras.models import load_model
-    from data.model_costr import vectorize
-    import pandas as pd
-    import re
-    from sklearn.model_selection import train_test_split
-    from keras.preprocessing import sequence
-    from keras.models import Sequential
-    from keras.layers import Dense, Dropout, Activation
-    from keras.layers import Embedding
-    from keras.layers import Conv1D, GlobalMaxPooling1D
-    maxlen = 7916
-    model = load_model('data/my_model.h5')
-    a = model.predict(sequence.pad_sequences(np.array(vectorize(text)).reshape(-1, 1), maxlen=maxlen))
-    c = []
-    for x in a:
-        x = list(x)
-        c += x
-    result = max(c)
-    return result
+import numpy as np
+import pandas as pd
+import itertools
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
 
+df = pd.read_csv('news.csv')
+
+labels = df.label
+
+x_train, x_test, y_train, y_test = train_test_split(df['text'], labels, test_size=0.2, random_state=7)
+
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
+tfidf_train = tfidf_vectorizer.fit_transform(x_train)
+tfidf_test = tfidf_vectorizer.transform(x_test)
+
+pac = PassiveAggressiveClassifier(max_iter=50)
+pac.fit(tfidf_train, y_train)
+
+y_pred = pac.predict(tfidf_test)
+score = accuracy_score(y_test, y_pred)
+
+
+def pred(text):
+    x_test = [text]
+    tfidf_test = tfidf_vectorizer.transform(x_test)
+    return pac.predict(tfidf_test)[0]
 
 def analyz(text):
     """Возвращает основные фразы из текста"""

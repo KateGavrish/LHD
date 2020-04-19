@@ -6,30 +6,6 @@ from data.forms import *
 from func_mod import *
 import tensorflow
 
-
-def predict(text):
-    """Возвращает значение от 0 до 1 - фейковость новости"""
-    import numpy as np
-    from keras.models import load_model
-    from data.model_costr import vectorize
-    from keras.preprocessing import sequence
-
-    maxlen = 7916
-    model = load_model('data/my_model.h5')
-    a = model.predict(sequence.pad_sequences(np.array(vectorize(text)).reshape(-1, 1), maxlen=maxlen))
-    c = []
-    for x in a:
-        x = list(x)
-        c += x
-    d = len(c)
-    s = len(list(filter(lambda x: x > 0.17, c)))
-    try:
-        result = s / d
-    except:
-        result = 1
-    return result
-
-
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'secret_key'
@@ -46,7 +22,11 @@ def index():
     form = CheckForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.text.data:
-            percent = int(round(predict(form.text.data) * 100))
+            percent = pred(form.text.data)
+            if percent == 'FAKE':
+                percent = 100
+            else:
+                percent = 1
             WORDS = analyz(form.text.data)
             return redirect(f'/info/{percent}')
     return render_template('index_aut.html', form=form)

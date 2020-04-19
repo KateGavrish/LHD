@@ -21,7 +21,12 @@ def predict(text):
     for x in a:
         x = list(x)
         c += x
-    result = max(c)
+    d = len(c)
+    s = len(list(filter(lambda x: x > 0.17, c)))
+    try:
+        result = s / d
+    except:
+        result = 1
     return result
 
 
@@ -32,21 +37,24 @@ app.config['SECRET_KEY'] = 'secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/user_data.sqlite")
+WORDS = []
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global WORDS
     form = CheckForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.text.data:
             percent = int(round(predict(form.text.data) * 100))
+            WORDS = analyz(form.text.data)
             return redirect(f'/info/{percent}')
     return render_template('index_aut.html', form=form)
 
 
 @app.route('/info/<int:a>')
 def info(a):
-    return render_template('analitic.html', per=a)
+    return render_template('analitic.html', per=a, words=WORDS)
 
 
 @login_manager.user_loader

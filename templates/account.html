@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div>
 <h1>User feedback</h1>
 <h3>Count: {{ count }}</h3>
 {% for item in mistakes%}
@@ -13,5 +14,6 @@
             Text: {{ item.text }}
         </div>
     </div>
+</div>
 {% endfor %}
 {% endblock %}

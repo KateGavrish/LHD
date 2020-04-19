@@ -20,7 +20,7 @@ def global_init(db_file):
     conn_str = 'sqlite:///' + db_file.strip()
     print(f"Подключение к базе данных по адресу {conn_str}")
 
-    engine = sa.create_engine(conn_str, echo=False)
+    engine = sa.create_engine(conn_str, echo=False, connect_args={"check_same_thread": False})
     __factory = orm.sessionmaker(bind=engine)
 
     # noinspection PyUnresolvedReferences

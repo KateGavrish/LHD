@@ -2,19 +2,10 @@
 
 {% block content %}
 <h1>Fake news checking</h1>
-<h2>Enter URL or article text</h2>
+<h2>Enter article text</h2>
 <div class="cont">
     <form class="params" action="" method="post">
     {{ form.hidden_tag() }}
-    <p>
-        {{ form.url.label }}<br>
-        {{ form.url(class="form-control") }}<br>
-
-        {% for error in form.url.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-        {% endfor %}
     <p>
         {{ form.text.label }}<br>
         {{ form.text(class="form-control") }}<br>

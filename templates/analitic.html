@@ -1,7 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+        #qwert {
+            width: 80%;
+            text-align: center;
+        }
+        #qwert ul {
+            list-style-type: none;
+        }
+
+        #qwert li {
+            display: block;
+            width: 50%;
+            float: left;
+        }
+   </style>
 <div class="wrap">
+        <h1>This text  is fake on...</h1>
 		<canvas id="canvas" width="300" height="300"></canvas>
         <script type="text/javascript">
             var canvas = document.getElementById('canvas'),
@@ -107,5 +123,30 @@
             ctx.fillText(percents + '%', xc, yc);
         }
         </script>
+<h2>Basic text expressions</h2>
 </div>
+    <div id="qwert">
+
+        <ul>
+            {% for elem in words %}
+            <li>{{ elem }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% if current_user.is_authenticated %}
+    <form class="login_form" method="post">
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <p>
+        {{ form.text.label }}<br>
+        {{ form.text(class="form-control") }}<br>
+        {% for error in form.text.errors %}
+    <p class="alert alert-danger" role="alert">
+        {{ error }}
+    </p>
+    {% endfor %}
+    <p>{{ form.submit(type="submit", class="btn btn-outline-success") }}</p>
+    {{message}}
+</form>
+{% endif %}
 {% endblock %}

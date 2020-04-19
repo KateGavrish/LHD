@@ -1,10 +1,10 @@
 from flask import Flask, render_template, redirect, request
 from data import db_session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from data.users import User
+from data.users import User, Mistakes
 from data.forms import *
 from func_mod import *
-import tensorflow
+# import tensorflow
 
 
 def predict(text):
@@ -21,7 +21,12 @@ def predict(text):
     for x in a:
         x = list(x)
         c += x
-    result = max(c)
+    d = len(c)
+    s = len(list(filter(lambda x: x > 0.17, c)))
+    try:
+        result = s / d
+    except:
+        result = 1
     return result
 
 
@@ -32,21 +37,41 @@ app.config['SECRET_KEY'] = 'secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/user_data.sqlite")
+WORDS = []
+ADMIN = [1]
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global WORDS
     form = CheckForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.text.data:
-            percent = int(round(predict(form.text.data) * 100))
+            if current_user.is_authenticated:
+                session = db_session.create_session()
+                user = session.query(User).get(current_user.id)
+                user.last = form.text.data
+                session.commit()
+            # percent = int(round(predict(form.text.data) * 100))
+            # WORDS = analyz(form.text.data)
+            percent = 80
             return redirect(f'/info/{percent}')
     return render_template('index_aut.html', form=form)
 
 
-@app.route('/info/<int:a>')
+@app.route('/info/<int:a>', methods=['GET', 'POST'])
 def info(a):
-    return render_template('analitic.html', per=a)
+    form = MistakeForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        session = db_session.create_session()
+        user = session.query(User).get(current_user.id)
+        mistake = Mistakes()
+        mistake.text = user.last
+        mistake.comment = form.text.data
+        session.add(mistake)
+        session.commit()
+        return redirect('/')
+    return render_template('analitic.html', per=a, words=WORDS, form=form)
 
 
 @login_manager.user_loader
@@ -68,10 +93,10 @@ def register():
         user = User()
         user.name = form.name.data
         user.email = form.email.data
+        user.last = ''
         user.set_password(form.password.data)
         session.add(user)
         session.commit()
-
         return redirect('/login')
     return render_template('register.html', title='Register', form=form)
 
@@ -95,6 +120,29 @@ def login():
 def logout():
     logout_user()
     return redirect("/")
+
+
+@app.route('/account')
+@login_required
+def account():
+    if current_user.is_authenticated and current_user.id in ADMIN:
+        session = db_session.create_session()
+        mistakes = session.query(Mistakes).all()
+        return render_template('account.html', mistakes=mistakes, count=len(mistakes))
+    return redirect('/')
+
+
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def news_delete(id):
+    if current_user.is_authenticated and current_user.id in ADMIN:
+        session = db_session.create_session()
+        mistakes = session.query(Mistakes).get(id)
+        if mistakes:
+            session.delete(mistakes)
+            session.commit()
+        return redirect('/account')
+    return redirect('/')
 
 
 if __name__ == '__main__':

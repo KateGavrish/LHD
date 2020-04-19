@@ -23,3 +23,8 @@ class CheckForm(FlaskForm):
     url = StringField('URL')
     text = TextAreaField('Text')
     submit = SubmitField('Submit')
+
+
+class MistakeForm(FlaskForm):
+    text = TextAreaField('Something went wrong? leave your comment', validators=[DataRequired()])
+    submit = SubmitField('Submit')

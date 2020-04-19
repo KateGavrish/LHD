@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>User feedback</h1>
+<h3>Count: {{ count }}</h3>
+{% for item in mistakes%}
+    <div class="col-md6 border rounded">
+        <a href="/delete/{{ item.id }}" class="btn btn-outline-danger">Delete</a>
+        <div>
+            Comment: {{ item.comment }}
+        </div>
+        <div>
+            Text: {{ item.text }}
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}

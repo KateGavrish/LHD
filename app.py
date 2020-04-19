@@ -22,6 +22,11 @@ def index():
     form = CheckForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.text.data:
+            if current_user.is_authenticated:
+                session = db_session.create_session()
+                user = session.query(User).get(current_user.id)
+                user.last = form.text.data
+                session.commit()
             percent = pred(form.text.data)
             if percent == 'FAKE':
                 percent = 100
@@ -32,9 +37,19 @@ def index():
     return render_template('index_aut.html', form=form)
 
 
-@app.route('/info/<int:a>')
+@app.route('/info/<int:a>', methods=['GET', 'POST'])
 def info(a):
-    return render_template('analitic.html', per=a, words=WORDS)
+    form = MistakeForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        session = db_session.create_session()
+        user = session.query(User).get(current_user.id)
+        mistake = Mistakes()
+        mistake.text = user.last
+        mistake.comment = form.text.data
+        session.add(mistake)
+        session.commit()
+        return redirect('/')
+    return render_template('analitic.html', per=a, words=WORDS, form=form)
 
 
 @login_manager.user_loader
@@ -44,7 +59,7 @@ def load_user(user_id):
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
+def register():
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:
@@ -56,10 +71,10 @@ def reqister():
         user = User()
         user.name = form.name.data
         user.email = form.email.data
+        user.last = ''
         user.set_password(form.password.data)
         session.add(user)
         session.commit()
-
         return redirect('/login')
     return render_template('register.html', title='Register', form=form)
 
@@ -83,6 +98,29 @@ def login():
 def logout():
     logout_user()
     return redirect("/")
+
+
+@app.route('/account')
+@login_required
+def account():
+    if current_user.is_authenticated and current_user.id in ADMIN:
+        session = db_session.create_session()
+        mistakes = session.query(Mistakes).all()
+        return render_template('account.html', mistakes=mistakes, count=len(mistakes))
+    return redirect('/')
+
+
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def news_delete(id):
+    if current_user.is_authenticated and current_user.id in ADMIN:
+        session = db_session.create_session()
+        mistakes = session.query(Mistakes).get(id)
+        if mistakes:
+            session.delete(mistakes)
+            session.commit()
+        return redirect('/account')
+    return redirect('/')
 
 
 if __name__ == '__main__':

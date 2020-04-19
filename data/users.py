@@ -12,9 +12,18 @@ class User(SqlAlchemyBase, UserMixin):
     name = sqlalchemy.Column(sqlalchemy.String)
     email = sqlalchemy.Column(sqlalchemy.String, unique=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String)
+    last = sqlalchemy.Column(sqlalchemy.String)
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.hashed_password, password)
+
+
+class Mistakes(SqlAlchemyBase, UserMixin):
+    __tablename__ = 'mistakes'
+
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    text = sqlalchemy.Column(sqlalchemy.String)
+    comment = sqlalchemy.Column(sqlalchemy.String)
